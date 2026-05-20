@@ -173,10 +173,8 @@
 
     // ==========================================
     // --- SOUND MANAGER ---
-    // PASTE YOUR SOUND URLS HERE!
     // ==========================================
     const sounds = {
-        const sounds = {
         dice: new Audio('sounds/dice.mp3'),
         move: new Audio('sounds/move.mp3'),
         capture: new Audio('sounds/capture.mp3'),
@@ -264,10 +262,7 @@
         }
 
         gameState.hasRolled = true;
-        
-        // --- DICE SOUND TRIGGER ---
         playSound('dice');
-        
         renderDice(currentTurnColor, gameState.currentRoll);
 
         let movableTokens = getMovableTokens(currentTurnColor, gameState.currentRoll);
@@ -314,10 +309,7 @@
             token.state = 'main';
             token.trackPos = startOffsets[token.color];
             moveTokenToDOM(token);
-            
-            // --- MOVE SOUND TRIGGER (Out of base) ---
             playSound('move');
-            
             checkCapture(token);
         } else if (token.state === 'main') {
             let relativeTravel = calculateRelativeDistance(token);
@@ -328,24 +320,16 @@
                 token.trackPos = (token.trackPos + gameState.currentRoll) % 52;
             }
             moveTokenToDOM(token);
-            
-            // --- MOVE SOUND TRIGGER (Main Board) ---
             playSound('move');
-            
             checkCapture(token);
         } else if (token.state === 'homeTrack') {
             token.trackPos += gameState.currentRoll;
             moveTokenToDOM(token);
-            
-            // --- MOVE SOUND TRIGGER (Home Track) ---
             playSound('move');
             
             if(token.trackPos === 5) {
                 token.state = 'finished';
-                
-                // --- FINISH SOUND TRIGGER ---
                 playSound('finish');
-                
                 gameState.hasRolled = false; 
                 document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
                 return;
@@ -391,10 +375,7 @@
         let enemies = gameState.tokens.filter(t => t.color !== landingToken.color && t.state === 'main' && t.trackPos === landingToken.trackPos);
         
         if (enemies.length > 0) {
-            
-            // --- CAPTURE SOUND TRIGGER ---
             playSound('capture');
-            
             enemies.forEach(enemy => {
                 enemy.state = 'home';
                 enemy.trackPos = -1;
@@ -405,16 +386,13 @@
     }
 
     function nextTurn() {
-        // Hide previous dice
         let prevColor = colors[gameState.turnIndex];
         document.getElementById(`dice-${prevColor}`).classList.remove('visible', 'ready-to-roll');
         document.getElementById(`panel-${prevColor}`).classList.remove('active');
         
-        // Switch index
         gameState.turnIndex = (gameState.turnIndex + 1) % 4;
         let nextColor = colors[gameState.turnIndex];
         
-        // Show next dice and highlight
         document.getElementById(`panel-${nextColor}`).classList.add('active');
         document.getElementById(`dice-${nextColor}`).classList.add('visible', 'ready-to-roll');
         
@@ -423,7 +401,6 @@
     }
 
     initGame();
-
 </script>
 </body>
 </html>
