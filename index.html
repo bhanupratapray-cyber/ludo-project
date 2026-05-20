@@ -178,8 +178,9 @@
 
     function playSound(type) {
         if (sounds[type]) {
-            sounds[type].currentTime = 0; 
-            sounds[type].play().catch(e => console.log("Audio blocked by browser:", e));
+            // Clone the sound so rapid steps don't lag or cut each other off
+            let soundClone = sounds[type].cloneNode();
+            soundClone.play().catch(e => console.log("Audio blocked by browser:", e));
         }
     }
 
@@ -329,12 +330,16 @@
             token.trackPos += 1;
         }
 
+        // Physically move the token
         moveTokenToDOM(token);
+        
+        // Play the instant clone sound exactly as it moves
         playSound('move');
 
+        // Changed from 300 to 200 for a snappier, less laggy walk
         setTimeout(() => {
             walkToken(token, stepsLeft - 1, currentTurnColor);
-        }, 300);
+        }, 200); 
     }
 
     function finalizeMove(token, currentTurnColor) {
