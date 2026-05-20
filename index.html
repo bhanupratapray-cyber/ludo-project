@@ -95,13 +95,10 @@
             display: grid; grid-template-areas: "a . c" "e g f" "d . b"; 
             padding: 4px; gap: 2px; box-sizing: border-box; cursor: pointer; 
             box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.5);
-            /* Start Invisible */
             visibility: hidden; opacity: 0; transition: opacity 0.3s;
         }
 
-        /* Visible class for the active dice */
         .dice.visible { visibility: visible; opacity: 1; }
-
         .dot { background: #222; border-radius: 50%; width: 100%; height: 100%; }
 
         @keyframes dice-glow { 0% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 20px white; } 100% { transform: scale(1); } }
@@ -171,9 +168,7 @@
         tokens: []
     };
 
-    // ==========================================
     // --- SOUND MANAGER ---
-    // ==========================================
     const sounds = {
         dice: new Audio('sounds/dice.mp3'),
         move: new Audio('sounds/move.mp3'),
@@ -187,7 +182,6 @@
             sounds[type].play().catch(e => console.log("Audio blocked by browser:", e));
         }
     }
-    // ==========================================
 
     function initGame() {
         const board = document.getElementById('board');
@@ -294,6 +288,7 @@
         });
     }
 
+    // --- NEW MOVEMENT ANIMATION ---
     function handleTokenClick(tokenId) {
         let token = gameState.tokens.find(t => t.id === tokenId);
         let currentTurnColor = colors[gameState.turnIndex];
@@ -308,33 +303,50 @@
         if (token.state === 'home' && gameState.currentRoll === 6) {
             token.state = 'main';
             token.trackPos = startOffsets[token.color];
-            moveTokenToDOM(token);
             playSound('move');
-            checkCapture(token);
-        } else if (token.state === 'main') {
-            let relativeTravel = calculateRelativeDistance(token);
-            if (relativeTravel + gameState.currentRoll > 50) {
-                token.state = 'homeTrack';
-                token.trackPos = (relativeTravel + gameState.currentRoll) - 51; 
-            } else {
-                token.trackPos = (token.trackPos + gameState.currentRoll) % 52;
-            }
-            moveTokenToDOM(token);
-            playSound('move');
-            checkCapture(token);
-        } else if (token.state === 'homeTrack') {
-            token.trackPos += gameState.currentRoll;
-            moveTokenToDOM(token);
-            playSound('move');
-            
-            if(token.trackPos === 5) {
-                token.state = 'finished';
-                playSound('finish');
-                gameState.hasRolled = false; 
-                document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
-                return;
-            }
+            moveTokenToDOM(token); 
+            finalizeMove(token, currentTurnColor);
+        } else {
+            walkToken(token, gameState.currentRoll, currentTurnColor);
         }
+    }
+
+    function walkToken(token, stepsLeft, currentTurnColor) {
+        if (stepsLeft === 0) {
+            finalizeMove(token, currentTurnColor);
+            return;
+        }
+
+        if (token.state === 'main') {
+            let relativeTravel = calculateRelativeDistance(token);
+            if (relativeTravel + 1 > 50) {
+                token.state = 'homeTrack';
+                token.trackPos = 0; 
+            } else {
+                token.trackPos = (token.trackPos + 1) % 52;
+            }
+        } else if (token.state === 'homeTrack') {
+            token.trackPos += 1;
+        }
+
+        moveTokenToDOM(token);
+        playSound('move');
+
+        setTimeout(() => {
+            walkToken(token, stepsLeft - 1, currentTurnColor);
+        }, 300);
+    }
+
+    function finalizeMove(token, currentTurnColor) {
+        if (token.state === 'homeTrack' && token.trackPos === 5) {
+            token.state = 'finished';
+            playSound('finish');
+            gameState.hasRolled = false; 
+            document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
+            return;
+        }
+
+        checkCapture(token);
 
         if (gameState.currentRoll === 6 || gameState.bonusRoll) {
             gameState.hasRolled = false;
@@ -401,6 +413,7 @@
     }
 
     initGame();
+
 </script>
 </body>
 </html>
