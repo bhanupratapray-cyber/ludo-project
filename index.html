@@ -33,140 +33,161 @@
 
     <style>
         :root {
-            /* Matched exactly to the punchy colors in your reference */
-            --red: #E6222B; 
-            --green: #249A41; 
-            --blue: #1A75D5; 
-            --yellow: #F3C300;
-            --bg: #2C3E50; /* A nice dark blue/gray for the background */
-            --board-size: min(95vw, 500px); 
+            /* EXACT COLORS FROM YOUR IMAGE */
+            --red: #D82E2F; 
+            --green: #25A144; 
+            --blue: #1B85D6; 
+            --yellow: #FFC90E;
+            --bg-color: #2A344E; 
+            --board-size: min(95vw, 450px); 
             --cell-size: calc(var(--board-size) / 15);
         }
 
-        body { margin: 0; background-color: var(--bg); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: manipulation; }
+        body { 
+            margin: 0; background-color: var(--bg-color); color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: space-between; height: 100vh; overflow: hidden; 
+            touch-action: manipulation;
+        }
 
-        .game-wrapper { display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%; position: relative; }
+        /* --- HEADER AREA --- */
+        .header { width: 95%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-top: 10px;}
+        .header-left { display: flex; gap: 10px; }
+        .header-btn { background: #3775D9; border: 2px solid #5C95F3; border-radius: 8px; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 0 #2151A1; cursor: pointer;}
+        .trophy-pill { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; }
+        .trophy-icon { font-size: 18px; }
+
+        /* --- MAIN LAYOUT --- */
+        .game-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; flex-grow: 1; justify-content: center; gap: 15px; }
+
+        /* --- PLAYER AVATAR AREAS --- */
+        .player-row { width: var(--board-size); display: flex; align-items: flex-end; position: relative; }
+        .row-top { justify-content: flex-end; }
+        .row-bottom { justify-content: flex-start; }
+
+        .avatar-box { 
+            width: 70px; height: 70px; background: #FF4B55; border: 3px solid white; 
+            border-radius: 6px; display: flex; justify-content: center; align-items: flex-end; 
+            overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;
+        }
+        .avatar-box img { width: 85%; object-fit: contain; } /* Use an actual avatar image here */
+        .avatar-box.active { box-shadow: 0 0 15px white, 0 4px 10px rgba(0,0,0,0.5); }
+
+        .chat-bubble { position: absolute; top: -15px; right: -25px; font-size: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
+
+        .dice-container { margin: 0 15px; display: flex; align-items: center; }
+
+        /* Auto Mode Toggle */
+        .auto-mode { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #aaa; margin-left: 10px;}
+        .toggle { background: #5DB75D; border-radius: 15px; width: 40px; height: 20px; position: relative; margin-bottom: 5px; display: flex; align-items: center; padding: 0 4px; box-sizing: border-box; font-weight: bold; font-size: 9px;}
+        .toggle::after { content: ''; position: absolute; right: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; box-shadow: -1px 1px 3px rgba(0,0,0,0.3); }
 
         /* --- THE BOARD --- */
-        .board { width: var(--board-size); height: var(--board-size); background: white; border: 2px solid #111; display: grid; grid-template-columns: repeat(15, 1fr); grid-template-rows: repeat(15, 1fr); box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
-        .cell { border: 1px solid #c9c9c9; box-sizing: border-box; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; position: relative; background: white; }
+        .board { width: var(--board-size); height: var(--board-size); background: white; border: 1px solid #333; display: grid; grid-template-columns: repeat(15, 1fr); grid-template-rows: repeat(15, 1fr); box-shadow: 0 10px 20px rgba(0,0,0,0.4); position: relative; }
+        .cell { border: 1px solid #999; box-sizing: border-box; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; position: relative; background: white; }
         
-        /* Vibrant Colors for the path */
-        .bg-red { background-color: var(--red); } 
-        .bg-green { background-color: var(--green); }
-        .bg-blue { background-color: var(--blue); } 
-        .bg-yellow { background-color: var(--yellow); }
+        .bg-red { background-color: var(--red); } .bg-green { background-color: var(--green); }
+        .bg-blue { background-color: var(--blue); } .bg-yellow { background-color: var(--yellow); }
 
-        /* --- PLAYER BASES --- */
-        .base { grid-column: span 6; grid-row: span 6; padding: 12%; display: flex; justify-content: center; align-items: center; border: 1px solid #111; }
-        .base-inner { width: 100%; height: 100%; background: white; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20%; padding: 20%; box-sizing: border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        /* The exact look of the token resting spots in your picture */
-        .base-spot { background: #E0E0E0; border-radius: 50%; box-shadow: inset 0 3px 5px rgba(0,0,0,0.2), 0 1px 1px white; display: flex; justify-content: center; align-items: center; position: relative; }
+        /* BASE SQUARES */
+        .base { grid-column: span 6; grid-row: span 6; padding: 13%; display: flex; justify-content: center; align-items: center; border: 1px solid #555; }
+        .base-inner { width: 100%; height: 100%; background: white; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15%; padding: 15%; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        /* PEDESTALS (Where pawns sit) */
+        .base-spot { background: #D6D6D6; border-radius: 50%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 2px 0 #FFF; display: flex; justify-content: center; align-items: center; position: relative; }
 
-        /* --- CENTER HOME --- */
-        .center-home { grid-area: 7 / 7 / 10 / 10; position: relative; border: 1px solid #111; background: white; }
+        /* CENTER TRIANGLES */
+        .center-home { grid-area: 7 / 7 / 10 / 10; position: relative; background: white; }
         .center-home div { position: absolute; width: 0; height: 0; border-style: solid; }
         .ct-green { border-width: calc(var(--cell-size) * 1.5) 0 calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5); border-color: transparent transparent transparent var(--green); left: 0; top: 0; }
-        .ct-yellow { border-width: calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) 0 calc(var(--cell-size) * 1.5); border-color: var(--yellow) transparent transparent transparent; top: 0; right: 0; }
-        .ct-blue { border-width: calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) 0; border-color: transparent var(--blue) transparent transparent; right: 0; bottom: 0; }
-        .ct-red { border-width: 0 calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5); border-color: transparent transparent var(--red) transparent; left: 0; bottom: 0; }
+        .ct-yellow { border-width: calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) 0 calc(var(--cell-size) * 1.5); border-color: var(--yellow) transparent transparent transparent; top: 0; left: 0; }
+        .ct-blue { border-width: calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) 0; border-color: transparent var(--blue) transparent transparent; right: 0; top: 0; }
+        .ct-red { border-width: 0 calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5) calc(var(--cell-size) * 1.5); border-color: transparent transparent var(--red) transparent; right: 0; bottom: 0; }
 
-        /* --- ICONS (Stars & Arrows) --- */
-        /* Outlined stars instead of solid stars */
-        .safe-star::before { content: '☆'; position: absolute; font-size: calc(var(--cell-size) * 0.8); color: rgba(0,0,0,0.6); pointer-events: none; }
-        /* Subtler arrows */
-        .start-arrow::after { content: '➔'; position: absolute; font-size: calc(var(--cell-size) * 0.6); color: rgba(255,255,255,0.9); pointer-events: none; }
-        .arrow-right::after { transform: rotate(0deg); } .arrow-down::after { transform: rotate(90deg); }
-        .arrow-left::after { transform: rotate(180deg); } .arrow-up::after { transform: rotate(-90deg); }
+        /* ICONS */
+        .safe-star::before { content: '☆'; position: absolute; font-size: calc(var(--cell-size) * 0.7); color: rgba(0,0,0,0.4); pointer-events: none; }
+        .start-arrow::after { content: '⤶'; position: absolute; font-size: calc(var(--cell-size) * 0.7); color: rgba(0,0,0,0.3); pointer-events: none; }
+        .arrow-right::after { transform: rotate(135deg); } .arrow-down::after { transform: rotate(45deg); }
+        .arrow-left::after { transform: rotate(-45deg); } .arrow-up::after { transform: rotate(-135deg); }
 
-        /* --- 3D PLASTIC TOKENS --- */
-        /* Changed from a flat diamond to a 3D looking round pawn */
-        .token { 
-            width: 75%; height: 75%; 
-            border-radius: 50%; 
-            position: relative; z-index: 10; cursor: pointer; transition: 0.2s; 
-            display: flex; justify-content: center; align-items: center; 
-            /* Drop shadow onto the board */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset -2px -4px 6px rgba(0,0,0,0.4);
-            border: 1px solid rgba(0,0,0,0.2);
-        }
-        /* The top reflection of the plastic pawn */
-        .token::after { 
-            content: ''; width: 40%; height: 40%; 
-            background: rgba(255,255,255,0.7); 
-            border-radius: 50%; position: absolute; 
-            top: 15%; left: 15%; 
-            box-shadow: 0 0 4px rgba(255,255,255,0.8);
-        }
-        /* Radial gradients give the 3D spherical look */
-        .t-red { background: radial-gradient(circle at 30% 30%, #ff5252, var(--red)); } 
-        .t-green { background: radial-gradient(circle at 30% 30%, #4ae36b, var(--green)); }
-        .t-blue { background: radial-gradient(circle at 30% 30%, #4da5ff, var(--blue)); } 
-        .t-yellow { background: radial-gradient(circle at 30% 30%, #ffe45c, var(--yellow)); }
+        /* --- 3D PAWN TOKENS --- */
+        .token { width: calc(var(--cell-size) * 0.7); height: calc(var(--cell-size) * 1.1); position: relative; z-index: 10; cursor: pointer; transition: 0.2s; margin-top: -15px;}
+        .pawn-head { position: absolute; width: 100%; height: 60%; border-radius: 50%; top: 0; left: 0; box-shadow: inset -4px -4px 6px rgba(0,0,0,0.3), inset 2px 2px 6px rgba(255,255,255,0.6), 0 4px 4px rgba(0,0,0,0.4); z-index: 2;}
+        .pawn-base { position: absolute; width: 130%; height: 40%; border-radius: 40% 40% 40% 40%; bottom: 0; left: -15%; box-shadow: inset -4px -4px 6px rgba(0,0,0,0.3), inset 2px 2px 6px rgba(255,255,255,0.4), 0 5px 5px rgba(0,0,0,0.5); z-index: 1;}
         
-        @keyframes pulse-token { 0% { transform: scale(1); box-shadow: 0 4px 6px rgba(0,0,0,0.5); } 50% { transform: scale(1.15) translateY(-3px); box-shadow: 0 8px 12px rgba(0,0,0,0.6), 0 0 10px white; } 100% { transform: scale(1); box-shadow: 0 4px 6px rgba(0,0,0,0.5); } }
-        .token.movable { animation: pulse-token 1s infinite; z-index: 20; border: 2px solid white; }
+        .t-red .pawn-head, .t-red .pawn-base { background: #E43A3A; }
+        .t-green .pawn-head, .t-green .pawn-base { background: #2EA043; }
+        .t-blue .pawn-head, .t-blue .pawn-base { background: #246BBE; }
+        .t-yellow .pawn-head, .t-yellow .pawn-base { background: #DDB705; }
 
-        /* --- MOBILE UI PANELS --- */
-        .panel-row { display: flex; justify-content: space-between; width: var(--board-size); }
-        .player-panel { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; text-align: center; width: 35%; opacity: 0.5; transition: 0.3s; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; border: 2px solid transparent; }
-        
-        /* Turn Highlights */
-        .player-panel.active { opacity: 1; transform: scale(1.05); background: rgba(0,0,0,0.7); }
-        #panel-green.active { border-color: var(--green); box-shadow: 0 0 15px var(--green); } 
-        #panel-yellow.active { border-color: var(--yellow); box-shadow: 0 0 15px var(--yellow); }
-        #panel-red.active { border-color: var(--red); box-shadow: 0 0 15px var(--red); } 
-        #panel-blue.active { border-color: var(--blue); box-shadow: 0 0 15px var(--blue); }
+        @keyframes jump { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+        .token.movable { animation: jump 1s infinite; z-index: 20; }
 
-        .player-panel h3 { margin: 0; font-size: calc(var(--board-size) * 0.035); text-transform: uppercase; text-align: left; line-height: 1.2; width: 50%; color: white;}
-
-        /* --- STEALTH DICE --- */
+        /* --- DICE (Matched to Image) --- */
         .dice { 
-            width: calc(var(--board-size) * 0.12); height: calc(var(--board-size) * 0.12); 
-            background: white; border-radius: 8px; 
+            width: 50px; height: 50px; background: white; border-radius: 8px; border: 3px solid white;
             display: grid; grid-template-areas: "a . c" "e g f" "d . b"; 
-            padding: 4px; gap: 2px; box-sizing: border-box; cursor: pointer; 
-            box-shadow: inset 0 -4px 0 #ddd, 0 4px 6px rgba(0,0,0,0.5);
-            visibility: hidden; opacity: 0; transition: opacity 0.3s; border: 1px solid #ccc;
+            padding: 5px; gap: 2px; box-sizing: border-box; cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5); visibility: hidden; opacity: 0; transition: 0.3s;
         }
-
         .dice.visible { visibility: visible; opacity: 1; }
-        .dot { background: #222; border-radius: 50%; width: 100%; height: 100%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+        .dot { background: #111; border-radius: 50%; width: 100%; height: 100%; }
+        .ready-to-roll { box-shadow: 0 0 15px white, 0 4px 6px rgba(0,0,0,0.5); }
 
-        @keyframes dice-glow { 0% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 20px white; } 100% { transform: scale(1); } }
-        .ready-to-roll { animation: dice-glow 1s infinite; border: 2px solid white; }
+        /* --- AD BANNER --- */
+        .ad-banner { width: var(--board-size); height: 70px; border: 2px solid #EBEB5A; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; padding-left: 20px; font-size: 20px; font-weight: bold; font-style: italic; background: rgba(0,0,0,0.2); box-sizing: border-box;}
     </style>
 </head>
 <body>
 
+    <div class="header">
+        <div class="header-left">
+            <div class="header-btn">≡</div>
+            <div class="header-btn">i</div>
+        </div>
+        <div class="trophy-pill">
+            <span class="trophy-icon">🏆</span> $10 win
+        </div>
+    </div>
+
     <div class="game-wrapper">
-        <div class="panel-row">
-            <div class="player-panel" id="panel-green">
-                <h3>Bot<br>(Green)</h3>
-                <div class="dice" id="dice-green" onclick="handleDiceClick('green')"></div>
+        
+        <div class="player-row row-top">
+            <div class="dice-container">
+                <div class="dice" id="dice-blue" onclick="handleDiceClick('blue')"></div>
             </div>
-            <div class="player-panel" id="panel-yellow">
-                <h3>Bot<br>(Yellow)</h3>
-                <div class="dice" id="dice-yellow" onclick="handleDiceClick('yellow')"></div>
+            <div class="avatar-box" id="panel-blue">
+                <div style="font-size: 50px;">🧔</div> 
             </div>
         </div>
 
         <div class="board" id="board"></div>
 
-        <div class="panel-row">
-            <div class="player-panel active" id="panel-red">
-                <h3>You<br>(Red)</h3>
+        <div class="player-row row-bottom">
+            <div class="avatar-box active" id="panel-red">
+                <div class="chat-bubble">💬</div>
+                <div style="font-size: 50px;">🧔🏻‍♂️</div> 
+            </div>
+            <div class="dice-container">
                 <div class="dice visible ready-to-roll" id="dice-red" onclick="handleDiceClick('red')"></div>
             </div>
-            <div class="player-panel" id="panel-blue">
-                <h3>Bot<br>(Blue)</h3>
-                <div class="dice" id="dice-blue" onclick="handleDiceClick('blue')"></div>
+            <div class="auto-mode">
+                <div class="toggle">ON</div>
+                Auto Mode
             </div>
         </div>
+
+    </div>
+
+    <div class="ad-banner">
+        AD
     </div>
 
 <script>
-    const colors = ['red', 'green', 'yellow', 'blue'];
+    // Note: I removed green and yellow from active turns since the UI image only shows 1v1 (Red vs Blue). 
+    // To play all 4, you would add the green/yellow player panels back to the HTML.
+    const colors = ['red', 'blue']; 
     
     const mainPath = [
         {x:1,y:6},{x:2,y:6},{x:3,y:6},{x:4,y:6},{x:5,y:6}, 
@@ -210,9 +231,8 @@
 
     function playSound(type) {
         if (sounds[type]) {
-            // Clone the sound so rapid steps don't lag or cut each other off
-            let soundClone = sounds[type].cloneNode();
-            soundClone.play().catch(e => console.log("Audio blocked by browser:", e));
+            let clone = sounds[type].cloneNode();
+            clone.play().catch(e => console.log("Audio blocked by browser:", e));
         }
     }
 
@@ -222,27 +242,30 @@
 
         for (let y = 0; y < 15; y++) {
             for (let x = 0; x < 15; x++) {
-                if (y === 0 && x === 0) { html += createBase('green'); continue; }
-                if (y === 0 && x === 9) { html += createBase('yellow'); continue; }
-                if (y === 9 && x === 0) { html += createBase('red'); continue; }
-                if (y === 9 && x === 9) { html += createBase('blue'); continue; }
+                if (y === 0 && x === 0) { html += createBase('yellow'); continue; }
+                if (y === 0 && x === 9) { html += createBase('blue'); continue; }
+                if (y === 9 && x === 0) { html += createBase('green'); continue; }
+                if (y === 9 && x === 9) { html += createBase('red'); continue; }
+                
+                // Skip empty spots inside bases
                 if ((y < 6 && x < 6) || (y < 6 && x > 8) || (y > 8 && x < 6) || (y > 8 && x > 8)) continue;
 
+                // Center Triangle Area
                 if (x >= 6 && x <= 8 && y >= 6 && y <= 8) {
                     if (x === 6 && y === 6) html += `<div class="center-home"><div class="ct-green"></div><div class="ct-yellow"></div><div class="ct-red"></div><div class="ct-blue"></div></div>`;
                     continue;
                 }
 
                 let classes = 'cell';
-                if (y === 7 && x >= 1 && x <= 5) classes += ' bg-green';
-                if (x === 7 && y >= 1 && y <= 5) classes += ' bg-yellow';
-                if (x === 7 && y >= 9 && y <= 13) classes += ' bg-red';
-                if (y === 7 && x >= 9 && x <= 13) classes += ' bg-blue';
+                if (y === 7 && x >= 1 && x <= 5) classes += ' bg-yellow';
+                if (x === 7 && y >= 1 && y <= 5) classes += ' bg-blue';
+                if (x === 7 && y >= 9 && y <= 13) classes += ' bg-green';
+                if (y === 7 && x >= 9 && x <= 13) classes += ' bg-red';
 
-                if (y === 6 && x === 1) classes += ' bg-green start-arrow arrow-right';
-                if (y === 1 && x === 8) classes += ' bg-yellow start-arrow arrow-down';
-                if (y === 13 && x === 6) classes += ' bg-red start-arrow arrow-up';
-                if (y === 8 && x === 13) classes += ' bg-blue start-arrow arrow-left';
+                if (y === 6 && x === 1) classes += ' bg-yellow start-arrow arrow-right';
+                if (y === 1 && x === 8) classes += ' bg-blue start-arrow arrow-down';
+                if (y === 13 && x === 6) classes += ' bg-green start-arrow arrow-up';
+                if (y === 8 && x === 13) classes += ' bg-red start-arrow arrow-left';
                 if (safeZones.some(s => s.x === x && s.y === y)) classes += ' safe-star';
 
                 html += `<div class="${classes}" id="cell-${x}-${y}"></div>`;
@@ -250,7 +273,7 @@
         }
         board.innerHTML = html;
         createTokens();
-        renderDice('red', 6); renderDice('green', 6); renderDice('yellow', 6); renderDice('blue', 6);
+        renderDice('red', 6); renderDice('blue', 6);
     }
 
     function createBase(color) {
@@ -261,7 +284,7 @@
     }
 
     function createTokens() {
-        colors.forEach(color => {
+        ['red', 'green', 'yellow', 'blue'].forEach(color => {
             for (let i = 0; i < 4; i++) {
                 let tokenObj = { id: `${color}-${i}`, color: color, state: 'home', trackPos: -1 };
                 gameState.tokens.push(tokenObj);
@@ -269,6 +292,8 @@
                 let dom = document.createElement('div');
                 dom.className = `token t-${color}`;
                 dom.id = `dom-${tokenObj.id}`;
+                // The new Pawn HTML structure inside the token
+                dom.innerHTML = `<div class="pawn-head"></div><div class="pawn-base"></div>`;
                 dom.onclick = () => handleTokenClick(tokenObj.id);
                 document.getElementById(`base-${color}-${i}`).appendChild(dom);
             }
@@ -321,7 +346,6 @@
         });
     }
 
-    // --- NEW MOVEMENT ANIMATION ---
     function handleTokenClick(tokenId) {
         let token = gameState.tokens.find(t => t.id === tokenId);
         let currentTurnColor = colors[gameState.turnIndex];
@@ -362,16 +386,12 @@
             token.trackPos += 1;
         }
 
-        // Physically move the token
         moveTokenToDOM(token);
-        
-        // Play the instant clone sound exactly as it moves
         playSound('move');
 
-        // Changed from 300 to 200 for a snappier, less laggy walk
         setTimeout(() => {
             walkToken(token, stepsLeft - 1, currentTurnColor);
-        }, 200); 
+        }, 200);
     }
 
     function finalizeMove(token, currentTurnColor) {
@@ -439,7 +459,7 @@
         document.getElementById(`dice-${prevColor}`).classList.remove('visible', 'ready-to-roll');
         document.getElementById(`panel-${prevColor}`).classList.remove('active');
         
-        gameState.turnIndex = (gameState.turnIndex + 1) % 4;
+        gameState.turnIndex = (gameState.turnIndex + 1) % colors.length;
         let nextColor = colors[gameState.turnIndex];
         
         document.getElementById(`panel-${nextColor}`).classList.add('active');
