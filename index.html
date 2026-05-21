@@ -67,18 +67,26 @@
         .row-bottom { justify-content: flex-start; }
 
         .avatar-box { 
-            width: 70px; height: 70px; background: #FF4B55; border: 3px solid white; 
+            width: 70px; height: 70px; border: 3px solid white; 
             border-radius: 6px; display: flex; justify-content: center; align-items: flex-end; 
             overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;
+            background: #444; /* Default */
         }
-        .avatar-box img { width: 85%; object-fit: contain; } /* Use an actual avatar image here */
+        .avatar-box img { width: 85%; object-fit: contain; } 
         .avatar-box.active { box-shadow: 0 0 15px white, 0 4px 10px rgba(0,0,0,0.5); }
+
+        .green-player { background: var(--green); }
+        .blue-player { background: var(--blue); }
 
         .chat-bubble { position: absolute; top: -15px; right: -25px; font-size: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
 
         .dice-container { margin: 0 15px; display: flex; align-items: center; }
 
-       
+        /* Auto Mode Toggle */
+        .auto-mode { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #aaa; margin-left: 10px;}
+        .toggle { background: #5DB75D; border-radius: 15px; width: 40px; height: 20px; position: relative; margin-bottom: 5px; display: flex; align-items: center; padding: 0 4px; box-sizing: border-box; font-weight: bold; font-size: 9px;}
+        .toggle::after { content: ''; position: absolute; right: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; box-shadow: -1px 1px 3px rgba(0,0,0,0.3); }
+
         /* --- THE BOARD --- */
         .board { width: var(--board-size); height: var(--board-size); background: white; border: 1px solid #333; display: grid; grid-template-columns: repeat(15, 1fr); grid-template-rows: repeat(15, 1fr); box-shadow: 0 10px 20px rgba(0,0,0,0.4); position: relative; }
         .cell { border: 1px solid #999; box-sizing: border-box; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; position: relative; background: white; }
@@ -93,13 +101,13 @@
         /* PEDESTALS (Where pawns sit) */
         .base-spot { background: #D6D6D6; border-radius: 50%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 2px 0 #FFF; display: flex; justify-content: center; align-items: center; position: relative; }
 
-       /* CENTER TRIANGLES */
+        /* CENTER TRIANGLES */
         .center-home { grid-area: 7 / 7 / 10 / 10; position: relative; background: white; }
         .center-home div { position: absolute; width: 0; height: 0; border-style: solid; border-width: calc(var(--cell-size) * 1.5); top: 0; left: 0; }
-        .ct-yellow { border-color: transparent transparent transparent var(--yellow); } /* Points Right */
-        .ct-blue { border-color: var(--blue) transparent transparent transparent; }   /* Points Down */
-        .ct-red { border-color: transparent var(--red) transparent transparent; }     /* Points Left */
-        .ct-green { border-color: transparent transparent var(--green) transparent; } /* Points Up */
+        .ct-yellow { border-color: transparent transparent transparent var(--yellow); }
+        .ct-blue { border-color: var(--blue) transparent transparent transparent; }
+        .ct-red { border-color: transparent var(--red) transparent transparent; }
+        .ct-green { border-color: transparent transparent var(--green) transparent; }
 
         /* ICONS */
         .safe-star::before { content: '☆'; position: absolute; font-size: calc(var(--cell-size) * 0.7); color: rgba(0,0,0,0.4); pointer-events: none; }
@@ -120,7 +128,7 @@
         @keyframes jump { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
         .token.movable { animation: jump 1s infinite; z-index: 20; }
 
-        /* --- DICE (Matched to Image) --- */
+        /* --- DICE --- */
         .dice { 
             width: 50px; height: 50px; background: white; border-radius: 8px; border: 3px solid white;
             display: grid; grid-template-areas: "a . c" "e g f" "d . b"; 
@@ -153,7 +161,7 @@
             <div class="dice-container">
                 <div class="dice" id="dice-blue" onclick="handleDiceClick('blue')"></div>
             </div>
-            <div class="avatar-box" id="panel-blue">
+            <div class="avatar-box blue-player" id="panel-blue">
                 <div style="font-size: 50px;">🧔</div> 
             </div>
         </div>
@@ -161,12 +169,12 @@
         <div class="board" id="board"></div>
 
         <div class="player-row row-bottom">
-            <div class="avatar-box active" id="panel-red">
+            <div class="avatar-box green-player active" id="panel-green">
                 <div class="chat-bubble">💬</div>
                 <div style="font-size: 50px;">🧔🏻‍♂️</div> 
             </div>
             <div class="dice-container">
-                <div class="dice visible ready-to-roll" id="dice-red" onclick="handleDiceClick('red')"></div>
+                <div class="dice visible ready-to-roll" id="dice-green" onclick="handleDiceClick('green')"></div>
             </div>
             <div class="auto-mode">
                 <div class="toggle">ON</div>
@@ -181,9 +189,8 @@
     </div>
 
 <script>
-    // Note: I removed green and yellow from active turns since the UI image only shows 1v1 (Red vs Blue). 
-    // To play all 4, you would add the green/yellow player panels back to the HTML.
-    const colors = ['red', 'blue']; 
+    // 1v1 Mode: Only Green (Bottom) and Blue (Top) play
+    const colors = ['green', 'blue']; 
     
     const mainPath = [
         {x:1,y:6},{x:2,y:6},{x:3,y:6},{x:4,y:6},{x:5,y:6}, 
@@ -200,7 +207,7 @@
         {x:0,y:7},{x:0,y:6} 
     ];
 
-    // Corrected to match the new board layout!
+    // Corrected home paths pointing to the right colors
     const homePaths = {
         yellow: [{x:1,y:7},{x:2,y:7},{x:3,y:7},{x:4,y:7},{x:5,y:7},{x:6,y:7}],
         blue: [{x:7,y:1},{x:7,y:2},{x:7,y:3},{x:7,y:4},{x:7,y:5},{x:7,y:6}],
@@ -208,7 +215,7 @@
         green: [{x:7,y:13},{x:7,y:12},{x:7,y:11},{x:7,y:10},{x:7,y:9},{x:7,y:8}]
     };
 
-    // Corrected the starting block indexes!
+    // Corrected starting positions
     const startOffsets = { yellow: 0, blue: 13, red: 26, green: 39 };
     const safeZones = [ {x:1,y:6}, {x:2,y:8}, {x:8,y:1}, {x:6,y:2}, {x:13,y:8}, {x:12,y:6}, {x:6,y:13}, {x:8,y:12} ];
 
@@ -271,7 +278,9 @@
         }
         board.innerHTML = html;
         createTokens();
-        renderDice('red', 6); renderDice('blue', 6);
+        
+        // Ensure Green dice displays first since green goes first
+        renderDice('green', 6); renderDice('blue', 6);
     }
 
     function createBase(color) {
@@ -282,6 +291,7 @@
     }
 
     function createTokens() {
+        // Create 16 tokens to fill the board visually, even though only Green/Blue get turns
         ['red', 'green', 'yellow', 'blue'].forEach(color => {
             for (let i = 0; i < 4; i++) {
                 let tokenObj = { id: `${color}-${i}`, color: color, state: 'home', trackPos: -1 };
@@ -290,7 +300,6 @@
                 let dom = document.createElement('div');
                 dom.className = `token t-${color}`;
                 dom.id = `dom-${tokenObj.id}`;
-                // The new Pawn HTML structure inside the token
                 dom.innerHTML = `<div class="pawn-head"></div><div class="pawn-base"></div>`;
                 dom.onclick = () => handleTokenClick(tokenObj.id);
                 document.getElementById(`base-${color}-${i}`).appendChild(dom);
