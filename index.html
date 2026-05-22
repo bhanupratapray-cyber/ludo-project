@@ -154,7 +154,28 @@
             cursor: pointer; visibility: hidden; opacity: 0;
         }
         .dice-cube.visible { visibility: visible; opacity: 1; }
-        .ready-to-roll { filter: drop-shadow(0 0 10px white); animation: float 2s infinite; }
+        @keyframes jump-glow {
+            0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 5px white); }
+            50% { transform: translateY(-12px); filter: drop-shadow(0 0 15px #FFD700); }
+        }
+        
+        .ready-to-roll { 
+            animation: jump-glow 1s infinite; 
+            cursor: pointer; 
+        }
+
+        .roll-text {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+            font-weight: bold;
+            color: #222;
+            background: #FFD700; /* Gold background to make it pop */
+            border-radius: 4px;
+        }
         
         .face { 
             position: absolute; width: 50px; height: 50px; background: white; 
@@ -371,7 +392,7 @@
         board.innerHTML = html;
         createTokens();
         
-        renderDice('green', 6); renderDice('blue', 6);
+        setDiceToRoll('green');
     }
 
     function createBase(color) {
@@ -451,6 +472,17 @@
         } else {
             movableTokens.forEach(t => document.getElementById(`dom-${t.id}`).classList.add('movable'));
         }
+    }
+
+function setDiceToRoll(color) {
+        let cube = document.getElementById(`dice-${color}`);
+        let frontFace = cube.querySelector('.front');
+        
+        // Erase the dots and inject the text
+        frontFace.innerHTML = `<div class="roll-text">ROLL</div>`;
+        
+        // Ensure the dice snaps forward to face the camera
+        cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
     }
 
     function renderDice(color, num) {
@@ -533,6 +565,7 @@
             playSound('finish');
             gameState.hasRolled = false; 
             document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
+            setDiceToRoll(currentTurnColor);
             return;
         }
 
@@ -541,6 +574,7 @@
                 gameState.hasRolled = false;
                 gameState.bonusRoll = false;
                 document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
+                setDiceToRoll(currentTurnColor);
             } else {
                 setTimeout(nextTurn, 500);
             }
@@ -672,6 +706,7 @@
         let nextColor = colors[gameState.turnIndex];
         
         document.getElementById(`dice-${nextColor}`).classList.add('visible', 'ready-to-roll');
+        setDiceToRoll(nextColor);
         
         gameState.hasRolled = false;
         gameState.currentRoll = 0;
