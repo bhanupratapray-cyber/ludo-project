@@ -61,25 +61,6 @@
         /* --- MAIN LAYOUT --- */
         .game-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; flex-grow: 1; justify-content: center; gap: 15px; }
 
-        /* --- PLAYER AVATAR AREAS --- */
-        .player-row { width: var(--board-size); display: flex; align-items: flex-end; position: relative; }
-        .row-top { justify-content: flex-end; }
-        .row-bottom { justify-content: flex-start; }
-
-        .avatar-box { 
-            width: 70px; height: 70px; border: 3px solid white; 
-            border-radius: 6px; display: flex; justify-content: center; align-items: flex-end; 
-            overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;
-            background: #444; /* Default */
-        }
-        .avatar-box img { width: 85%; object-fit: contain; } 
-        .avatar-box.active { box-shadow: 0 0 15px white, 0 4px 10px rgba(0,0,0,0.5); }
-
-        .green-player { background: var(--green); }
-        .blue-player { background: var(--blue); }
-
-        .chat-bubble { position: absolute; top: -15px; right: -25px; font-size: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
-
         .dice-container { margin: 0 15px; display: flex; align-items: center; }
 
         /* Auto Mode Toggle */
@@ -115,6 +96,28 @@
         .arrow-right::after { transform: rotate(135deg); } .arrow-down::after { transform: rotate(45deg); }
         .arrow-left::after { transform: rotate(-45deg); } .arrow-up::after { transform: rotate(-135deg); }
 
+      /* BASE CAM (MEME TV SCREENS)  */
+        .base-cam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px; 
+            object-fit: cover; 
+            background-color: black;
+            z-index: 50; 
+            opacity: 0; 
+            visibility: hidden;
+            pointer-events: none; 
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .base-cam.playing {
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* --- 3D PAWN TOKENS --- */
         .token { width: calc(var(--cell-size) * 0.7); height: calc(var(--cell-size) * 1.1); position: relative; z-index: 10; cursor: pointer; transition: 0.2s; margin-top: -15px;}
         .pawn-head { position: absolute; width: 100%; height: 60%; border-radius: 50%; top: 0; left: 0; box-shadow: inset -4px -4px 6px rgba(0,0,0,0.3), inset 2px 2px 6px rgba(255,255,255,0.6), 0 4px 4px rgba(0,0,0,0.4); z-index: 2;}
@@ -128,16 +131,45 @@
         @keyframes jump { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
         .token.movable { animation: jump 1s infinite; z-index: 20; }
 
-        /* --- DICE --- */
-        .dice { 
-            width: 50px; height: 50px; background: white; border-radius: 8px; border: 3px solid white;
-            display: grid; grid-template-areas: "a . c" "e g f" "d . b"; 
-            padding: 5px; gap: 2px; box-sizing: border-box; cursor: pointer; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5); visibility: hidden; opacity: 0; transition: 0.3s;
+        /* --- 3D TUMBLING DICE --- */
+        .scene { width: 50px; height: 50px; perspective: 400px; margin: 0 15px; }
+        .dice-cube { 
+            width: 100%; height: 100%; position: relative; 
+            transform-style: preserve-3d; transition: transform 0.1s; 
+            cursor: pointer; visibility: hidden; opacity: 0;
         }
-        .dice.visible { visibility: visible; opacity: 1; }
+        .dice-cube.visible { visibility: visible; opacity: 1; }
+        .ready-to-roll { filter: drop-shadow(0 0 10px white); animation: float 2s infinite; }
+        
+        .face { 
+            position: absolute; width: 50px; height: 50px; background: white; 
+            border: 2px solid #ccc; border-radius: 8px; box-sizing: border-box;
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); /* NEW: Forces 3 columns */
+            grid-template-rows: repeat(3, 1fr);    /* NEW: Forces 3 rows */
+            grid-template-areas: "a . c" "e g f" "d . b"; 
+            padding: 5px; gap: 2px;
+        }
+        
+        /* Folding the box */
+        .front  { transform: rotateY(  0deg) translateZ(25px); }
+        .back   { transform: rotateY(180deg) translateZ(25px); }
+        .right  { transform: rotateY( 90deg) translateZ(25px); }
+        .left   { transform: rotateY(-90deg) translateZ(25px); }
+        .top    { transform: rotateX( 90deg) translateZ(25px); }
+        .bottom { transform: rotateX(-90deg) translateZ(25px); }
+
         .dot { background: #111; border-radius: 50%; width: 100%; height: 100%; }
-        .ready-to-roll { box-shadow: 0 0 15px white, 0 4px 6px rgba(0,0,0,0.5); }
+
+        /* The violent tumble animation */
+        @keyframes tumble {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1); }
+            25% { transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg) scale(1.2); }
+            50% { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg) scale(1.3); }
+            75% { transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg) scale(1.2); }
+            100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg) scale(1); }
+        }
+        .rolling { animation: tumble 0.6s linear infinite; pointer-events: none; }
 
         /* --- AD BANNER --- */
         .ad-banner { width: var(--board-size); height: 70px; border: 2px solid #EBEB5A; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; padding-left: 20px; font-size: 20px; font-weight: bold; font-style: italic; background: rgba(0,0,0,0.2); box-sizing: border-box;}
@@ -157,31 +189,28 @@
 
     <div class="game-wrapper">
         
-        <div class="player-row row-top">
-            <div class="dice-container">
-                <div class="dice" id="dice-blue" onclick="handleDiceClick('blue')"></div>
-            </div>
-            <div class="avatar-box blue-player" id="panel-blue">
-                <div style="font-size: 50px;">🧔</div> 
+        <div class="dice-container scene">
+            <div class="dice-cube" id="dice-blue" onclick="handleDiceClick('blue')">
+                <div class="face front"></div><div class="face back"></div>
+                <div class="face right"></div><div class="face left"></div>
+                <div class="face top"></div><div class="face bottom"></div>
             </div>
         </div>
 
         <div class="board" id="board"></div>
 
-        <div class="player-row row-bottom">
-            <div class="avatar-box green-player active" id="panel-green">
-                <div class="chat-bubble">💬</div>
-                <div style="font-size: 50px;">🧔🏻‍♂️</div> 
-            </div>
-            <div class="dice-container">
-                <div class="dice visible ready-to-roll" id="dice-green" onclick="handleDiceClick('green')"></div>
-            </div>
-            <div class="auto-mode">
-                <div class="toggle">ON</div>
-                Auto Mode
+        <div class="dice-container scene">
+            <div class="dice-cube visible ready-to-roll" id="dice-green" onclick="handleDiceClick('green')">
+                <div class="face front"></div><div class="face back"></div>
+                <div class="face right"></div><div class="face left"></div>
+                <div class="face top"></div><div class="face bottom"></div>
             </div>
         </div>
-
+        
+        <div class="auto-mode">
+            <div class="toggle">ON</div>
+            Auto Mode
+        </div>
     </div>
 
     <div class="ad-banner">
@@ -189,7 +218,6 @@
     </div>
 
 <script>
-    // 1v1 Mode: Only Green (Bottom) and Blue (Top) play
     const colors = ['green', 'blue']; 
     
     const mainPath = [
@@ -207,7 +235,6 @@
         {x:0,y:7},{x:0,y:6} 
     ];
 
-    // Corrected home paths pointing to the right colors
     const homePaths = {
         yellow: [{x:1,y:7},{x:2,y:7},{x:3,y:7},{x:4,y:7},{x:5,y:7},{x:6,y:7}],
         blue: [{x:7,y:1},{x:7,y:2},{x:7,y:3},{x:7,y:4},{x:7,y:5},{x:7,y:6}],
@@ -215,7 +242,6 @@
         green: [{x:7,y:13},{x:7,y:12},{x:7,y:11},{x:7,y:10},{x:7,y:9},{x:7,y:8}]
     };
 
-    // Corrected starting positions
     const startOffsets = { yellow: 0, blue: 13, red: 26, green: 39 };
     const safeZones = [ {x:1,y:6}, {x:2,y:8}, {x:8,y:1}, {x:6,y:2}, {x:13,y:8}, {x:12,y:6}, {x:6,y:13}, {x:8,y:12} ];
 
@@ -223,10 +249,12 @@
         turnIndex: 0,
         currentRoll: 0,
         hasRolled: false,
-        tokens: []
+        tokens: [],
+        bonusRoll: false,
+        badLuckCounters: { green: 0, blue: 0, red: 0, yellow: 0 },
+        epicEntrancePlayed: { green: false, blue: false, red: false, yellow: false }
     };
 
-    // --- SOUND MANAGER ---
     const sounds = {
         dice: new Audio('sounds/dice.mp3'),
         move: new Audio('sounds/move.mp3'),
@@ -234,10 +262,43 @@
         finish: new Audio('sounds/finish.mp3')
     };
 
+    const memeLibrary = {
+        kills_happy: ['memes/kills_happy/1.mp4', 'memes/kills_happy/2.mp4', 'memes/kills_happy/3.mp4', 'memes/kills_happy/4.mp4', 'memes/kills_happy/5.mp4'], 
+        kills_sad: ['memes/kills_sad/1.mp4', 'memes/kills_sad/2.mp4', 'memes/kills_sad/3.mp4'],
+        safe_zones: ['memes/safe_zones/1.mp4'],
+        epic_entrance: ['memes/epic_entrance/1.mp4']
+    };
+
+    function triggerMeme(category, baseColor, onComplete) {
+        let pool = memeLibrary[category];
+        if (!pool || pool.length === 0) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        let randomMeme = pool[Math.floor(Math.random() * pool.length)];
+        let screen = document.getElementById(`cam-${baseColor}`);
+
+        screen.src = randomMeme;
+        screen.classList.add('playing');
+        
+        screen.play().catch(e => {
+            console.log("Video playback failed:", e);
+            screen.classList.remove('playing');
+            if (onComplete) onComplete();
+        });
+
+        screen.onended = () => {
+            screen.classList.remove('playing');
+            screen.src = ""; 
+            if (onComplete) onComplete(); 
+        };
+    }
+
     function playSound(type) {
         if (sounds[type]) {
-            let clone = sounds[type].cloneNode();
-            clone.play().catch(e => console.log("Audio blocked by browser:", e));
+            sounds[type].currentTime = 0; // Rewind to start
+            sounds[type].play().catch(e => console.log("Audio blocked by browser:", e));
         }
     }
 
@@ -252,10 +313,8 @@
                 if (y === 9 && x === 0) { html += createBase('green'); continue; }
                 if (y === 9 && x === 9) { html += createBase('red'); continue; }
                 
-                // Skip empty spots inside bases
                 if ((y < 6 && x < 6) || (y < 6 && x > 8) || (y > 8 && x < 6) || (y > 8 && x > 8)) continue;
 
-                // Center Triangle Area
                 if (x >= 6 && x <= 8 && y >= 6 && y <= 8) {
                     if (x === 6 && y === 6) html += `<div class="center-home"><div class="ct-green"></div><div class="ct-yellow"></div><div class="ct-red"></div><div class="ct-blue"></div></div>`;
                     continue;
@@ -279,19 +338,18 @@
         board.innerHTML = html;
         createTokens();
         
-        // Ensure Green dice displays first since green goes first
         renderDice('green', 6); renderDice('blue', 6);
     }
 
     function createBase(color) {
-        return `<div class="base bg-${color}"><div class="base-inner">
+        return `<div class="base bg-${color}"><div class="base-inner" style="position: relative;">
+            <video class="base-cam" id="cam-${color}" playsinline></video>
             <div class="base-spot" id="base-${color}-0"></div><div class="base-spot" id="base-${color}-1"></div>
             <div class="base-spot" id="base-${color}-2"></div><div class="base-spot" id="base-${color}-3"></div>
         </div></div>`;
     }
 
     function createTokens() {
-        // Create 16 tokens to fill the board visually, even though only Green/Blue get turns
         ['red', 'green', 'yellow', 'blue'].forEach(color => {
             for (let i = 0; i < 4; i++) {
                 let tokenObj = { id: `${color}-${i}`, color: color, state: 'home', trackPos: -1 };
@@ -322,8 +380,37 @@
 
         gameState.hasRolled = true;
         playSound('dice');
-        renderDice(currentTurnColor, gameState.currentRoll);
+        
+        let cube = document.getElementById(`dice-${currentTurnColor}`);
+        cube.classList.add('rolling'); 
 
+        // THE FIXED SET_TIMEOUT BLOCK
+        setTimeout(() => {
+            cube.classList.remove('rolling'); 
+            renderDice(currentTurnColor, gameState.currentRoll); 
+
+            let activeTokens = gameState.tokens.filter(t => t.color === currentTurnColor && t.state !== 'home');
+            
+            if (activeTokens.length === 0) {
+                if (gameState.currentRoll !== 6) {
+                    gameState.badLuckCounters[currentTurnColor]++;
+                } else {
+                    if (gameState.badLuckCounters[currentTurnColor] >= 3 && !gameState.epicEntrancePlayed[currentTurnColor]) {
+                        gameState.epicEntrancePlayed[currentTurnColor] = true;
+                        
+                        triggerMeme('epic_entrance', currentTurnColor, () => {
+                            checkMovableTokens(currentTurnColor); 
+                        });
+                        return; 
+                    }
+                }
+            }
+
+            checkMovableTokens(currentTurnColor);
+        }, 600); // Wait 600ms for 3D spin
+    }
+
+    function checkMovableTokens(currentTurnColor) {
         let movableTokens = getMovableTokens(currentTurnColor, gameState.currentRoll);
         
         if (movableTokens.length === 0) {
@@ -338,9 +425,14 @@
             1: ['g'], 2: ['a','b'], 3: ['a','g','b'], 
             4: ['a','c','d','b'], 5: ['a','c','g','d','b'], 6: ['a','c','e','f','d','b']
         };
+        
+        let cube = document.getElementById(`dice-${color}`);
+        let frontFace = cube.querySelector('.front');
         let html = '';
         layouts[num].forEach(pos => { html += `<div class="dot" style="grid-area: ${pos}"></div>`; });
-        document.getElementById(`dice-${color}`).innerHTML = html;
+        frontFace.innerHTML = html;
+
+        cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
     }
 
     function getMovableTokens(color, roll) {
@@ -401,6 +493,7 @@
         }, 200);
     }
 
+    // THE FIXED FINALIZE LOGIC
     function finalizeMove(token, currentTurnColor) {
         if (token.state === 'homeTrack' && token.trackPos === 5) {
             token.state = 'finished';
@@ -410,15 +503,17 @@
             return;
         }
 
-        checkCapture(token);
+        const endTurnLogic = () => {
+            if (gameState.currentRoll === 6 || gameState.bonusRoll) {
+                gameState.hasRolled = false;
+                gameState.bonusRoll = false;
+                document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
+            } else {
+                setTimeout(nextTurn, 500);
+            }
+        };
 
-        if (gameState.currentRoll === 6 || gameState.bonusRoll) {
-            gameState.hasRolled = false;
-            gameState.bonusRoll = false;
-            document.getElementById(`dice-${currentTurnColor}`).classList.add('ready-to-roll');
-        } else {
-            setTimeout(nextTurn, 500);
-        }
+        checkCapture(token, currentTurnColor, endTurnLogic);
     }
 
     function calculateRelativeDistance(token) {
@@ -442,34 +537,59 @@
         if (targetId) document.getElementById(targetId).appendChild(document.getElementById(`dom-${token.id}`));
     }
 
-    function checkCapture(landingToken) {
-        if (landingToken.state !== 'main') return;
+    // THE FIXED CHECK_CAPTURE AND MEME LOGIC
+    function checkCapture(landingToken, currentTurnColor, onComplete) {
+        if (landingToken.state !== 'main') {
+            onComplete();
+            return;
+        }
+        
         let coord = mainPath[landingToken.trackPos];
         
-        if (safeZones.some(s => s.x === coord.x && s.y === coord.y)) return;
+        // RULE 2: THE SAFE ZONE MEME
+        if (safeZones.some(s => s.x === coord.x && s.y === coord.y)) {
+            let safeRoll = Math.floor(Math.random() * 4) + 1;
+            if (safeRoll === 1) {
+                triggerMeme('safe_zones', currentTurnColor, onComplete);
+            } else {
+                onComplete();
+            }
+            return; 
+        }
 
         let enemies = gameState.tokens.filter(t => t.color !== landingToken.color && t.state === 'main' && t.trackPos === landingToken.trackPos);
         
         if (enemies.length > 0) {
             playSound('capture');
+            let victimColor = enemies[0].color;
+            
             enemies.forEach(enemy => {
                 enemy.state = 'home';
                 enemy.trackPos = -1;
                 moveTokenToDOM(enemy); 
             });
             gameState.bonusRoll = true;
+
+            // RULE 1: THE DIRECTOR's COIN TOSS (The Kill)
+            let isHeads = Math.random() < 0.5; 
+            
+            if (isHeads) {
+                triggerMeme('kills_happy', currentTurnColor, onComplete);
+            } else {
+                triggerMeme('kills_sad', victimColor, onComplete);
+            }
+        } else {
+            onComplete();
         }
     }
 
     function nextTurn() {
         let prevColor = colors[gameState.turnIndex];
         document.getElementById(`dice-${prevColor}`).classList.remove('visible', 'ready-to-roll');
-        document.getElementById(`panel-${prevColor}`).classList.remove('active');
         
         gameState.turnIndex = (gameState.turnIndex + 1) % colors.length;
         let nextColor = colors[gameState.turnIndex];
         
-        document.getElementById(`panel-${nextColor}`).classList.add('active');
         document.getElementById(`dice-${nextColor}`).classList.add('visible', 'ready-to-roll');
         
         gameState.hasRolled = false;
