@@ -32,6 +32,21 @@
     </script>
 
     <style>
+
+        /* --- BUG 1 & 2 FIXES (DICE CORNERS & TOKEN STRETCHING) --- */
+        .cell { overflow: visible; } 
+        
+        .dice-corner {
+            position: absolute;
+            z-index: 100;
+        }
+        
+        /* Pushing them 60px outside the board, flush with the left/right edges */
+        .top-left { top: -60px; left: 0; }
+        .top-right { top: -60px; right: 0; }
+        .bottom-left { bottom: -60px; left: 0; }
+        .bottom-right { bottom: -60px; right: 0; }
+
         :root {
             /* EXACT COLORS FROM YOUR IMAGE */
             --red: #D82E2F; 
@@ -189,24 +204,42 @@
 
     <div class="game-wrapper">
         
-        <div class="dice-container scene">
-            <div class="dice-cube" id="dice-blue" onclick="handleDiceClick('blue')">
-                <div class="face front"></div><div class="face back"></div>
-                <div class="face right"></div><div class="face left"></div>
-                <div class="face top"></div><div class="face bottom"></div>
+        <div class="game-area" style="position: relative;">
+            
+            <div class="dice-corner top-left scene">
+                <div class="dice-cube" id="dice-yellow" onclick="handleDiceClick('yellow')">
+                    <div class="face front"></div><div class="face back"></div>
+                    <div class="face right"></div><div class="face left"></div>
+                    <div class="face top"></div><div class="face bottom"></div>
+                </div>
             </div>
+            <div class="dice-corner top-right scene">
+                <div class="dice-cube" id="dice-blue" onclick="handleDiceClick('blue')">
+                    <div class="face front"></div><div class="face back"></div>
+                    <div class="face right"></div><div class="face left"></div>
+                    <div class="face top"></div><div class="face bottom"></div>
+                </div>
+            </div>
+
+            <div class="board" id="board"></div>
+
+            <div class="dice-corner bottom-left scene">
+                <div class="dice-cube visible ready-to-roll" id="dice-green" onclick="handleDiceClick('green')">
+                    <div class="face front"></div><div class="face back"></div>
+                    <div class="face right"></div><div class="face left"></div>
+                    <div class="face top"></div><div class="face bottom"></div>
+                </div>
+            </div>
+            <div class="dice-corner bottom-right scene">
+                <div class="dice-cube" id="dice-red" onclick="handleDiceClick('red')">
+                    <div class="face front"></div><div class="face back"></div>
+                    <div class="face right"></div><div class="face left"></div>
+                    <div class="face top"></div><div class="face bottom"></div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="board" id="board"></div>
-
-        <div class="dice-container scene">
-            <div class="dice-cube visible ready-to-roll" id="dice-green" onclick="handleDiceClick('green')">
-                <div class="face front"></div><div class="face back"></div>
-                <div class="face right"></div><div class="face left"></div>
-                <div class="face top"></div><div class="face bottom"></div>
-            </div>
-        </div>
-        
         <div class="auto-mode">
             <div class="toggle">ON</div>
             Auto Mode
@@ -534,7 +567,37 @@
             targetId = `base-${token.color}-${token.id.split('-')[1]}`;
         }
 
-        if (targetId) document.getElementById(targetId).appendChild(document.getElementById(`dom-${token.id}`));
+        if (targetId) {
+            let targetBox = document.getElementById(targetId);
+            targetBox.appendChild(document.getElementById(`dom-${token.id}`));
+
+            // --- DYNAMIC TOKEN SCALING & STACKING ---
+            let tokensInBox = targetBox.querySelectorAll('.token');
+            let count = tokensInBox.length;
+
+            tokensInBox.forEach((t, i) => {
+                // If the token is inside its home base, leave it full size
+                if (targetId.startsWith('base-')) {
+                    t.style.position = 'relative';
+                    t.style.transform = 'scale(1) translate(0, 0)';
+                    return;
+                }
+
+                // If on the board, force absolute position so the box NEVER stretches
+                t.style.position = 'absolute';
+
+                // The 1/2, 1/3 math logic
+                if (count === 1) {
+                    t.style.transform = 'scale(1) translate(0, 0)'; // Full Size
+                } else if (count === 2) {
+                    t.style.transform = `scale(0.65) translate(${i === 0 ? '-30%' : '30%'}, 0)`; // Half Size
+                } else if (count === 3) {
+                    t.style.transform = `scale(0.55) translate(${i === 0 ? '-40%' : (i === 1 ? '40%' : '0')}, ${i === 2 ? '40%' : '-30%'})`; // One Third
+                } else {
+                    t.style.transform = `scale(0.45) translate(${i % 2 === 0 ? '-45%' : '45%'}, ${i < 2 ? '-45%' : '45%'})`; // Max crowded
+                }
+            });
+        }
     }
 
     // THE FIXED CHECK_CAPTURE AND MEME LOGIC
