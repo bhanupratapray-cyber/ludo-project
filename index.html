@@ -307,6 +307,7 @@
         bonusRoll: false,
         badLuckCounters: { green: 0, blue: 0, red: 0, yellow: 0 },
         epicEntrancePlayed: { green: false, blue: false, red: false, yellow: false }
+        pityTimer: { green: 0, blue: 0, red: 0, yellow: 0 }
     };
 
     const sounds = {
@@ -369,8 +370,15 @@
                 
                 if ((y < 6 && x < 6) || (y < 6 && x > 8) || (y > 8 && x < 6) || (y > 8 && x > 8)) continue;
 
+                // --- THE NEW WINNER'S ROOM LOGIC ---
                 if (x >= 6 && x <= 8 && y >= 6 && y <= 8) {
-                    if (x === 6 && y === 6) html += `<div class="center-home" id="center-home"><div class="ct-green"></div><div class="ct-yellow"></div><div class="ct-red"></div><div class="ct-blue"></div></div>`;
+                    if (x === 6 && y === 6) {
+                        html += `<div class="center-home" id="center-home">
+                                    <div class="ct-green"></div><div class="ct-yellow"></div><div class="ct-red"></div><div class="ct-blue"></div>
+                                    <!-- THE INVISIBLE LAYER FOR WINNING TOKENS -->
+                                    <div id="winner-room" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20;"></div>
+                                 </div>`;
+                    }
                     continue;
                 }
 
@@ -392,7 +400,8 @@
         board.innerHTML = html;
         createTokens();
         
-        setDiceToRoll('green');
+        // This ensures the glowing "ROLL" button works on the first turn!
+        setDiceToRoll('green'); 
     }
 
     function createBase(color) {
@@ -429,7 +438,18 @@
             gameState.currentRoll = parseInt(window.secretNextRoll);
             window.firebaseSet(window.diceRef, 'random'); 
         } else {
-            gameState.currentRoll = Math.floor(Math.random() * 6) + 1;
+           if (gameState.pityTimer[currentTurnColor] >= 12) {
+                gameState.currentRoll = 6; // Force a 6!
+            } else {
+                gameState.currentRoll = Math.floor(Math.random() * 6) + 1; // Normal roll
+            }
+        }
+
+        // Update the Pity Timer based on the result
+        if (gameState.currentRoll === 6) {
+            gameState.pityTimer[currentTurnColor] = 0; // Reset timer if they got a 6
+        } else {
+            gameState.pityTimer[currentTurnColor]++; // Add +1 to their bad luck streak
         }
 
         gameState.hasRolled = true;
@@ -592,13 +612,12 @@ function setDiceToRoll(color) {
     function moveTokenToDOM(token) {
         let targetId = '';
         
-        // Find out where this token belongs
         if (token.state === 'main') {
             let coord = mainPath[token.trackPos];
             targetId = `cell-${coord.x}-${coord.y}`;
         } else if (token.state === 'homeTrack' || token.state === 'finished') {
             if (token.trackPos === 5) {
-                targetId = 'center-home'; // THE FIX: Send it directly to the winner's circle!
+                targetId = 'winner-room'; // Drop it into the invisible layer!
             } else {
                 let coord = homePaths[token.color][token.trackPos];
                 targetId = `cell-${coord.x}-${coord.y}`;
@@ -609,26 +628,36 @@ function setDiceToRoll(color) {
 
         if (targetId) {
             let targetBox = document.getElementById(targetId);
-            
-            // Anti-Crash Failsafe: If the box doesn't exist, stop perfectly without freezing
             if (!targetBox) return; 
-
+            
+            // Just move the token
             targetBox.appendChild(document.getElementById(`dom-${token.id}`));
 
-            // --- DYNAMIC TOKEN SCALING & STACKING ---
-            let tokensInBox = targetBox.querySelectorAll('.token');
+            // Tell the universal scanner to fix all sizes on the board!
+            updateAllTokenSizes();
+        }
+    }
+
+    // --- NEW: THE UNIVERSAL TOKEN RESIZER ---
+    function updateAllTokenSizes() {
+        // Find every single box on the board that currently holds a token
+        let allContainers = document.querySelectorAll('.cell, .base-spot, #winner-room');
+        
+        allContainers.forEach(container => {
+            let tokensInBox = container.querySelectorAll('.token');
             let count = tokensInBox.length;
+            if (count === 0) return; // Skip empty boxes
 
             tokensInBox.forEach((t, i) => {
-                // Base tokens remain full size
-                if (targetId.startsWith('base-')) {
+                // If in the starting base, stay full size
+                if (container.id.startsWith('base-')) {
                     t.style.position = 'relative';
                     t.style.transform = 'scale(1) translate(0, 0)';
                     return;
                 }
 
-                // Winning tokens in the center! (Shrunk and stacked nicely)
-                if (targetId === 'center-home') {
+                // If in the winner's room, shrink and stack nicely in the middle
+                if (container.id === 'winner-room') {
                     t.style.position = 'absolute';
                     t.style.top = '35%';
                     t.style.left = '35%';
@@ -636,9 +665,8 @@ function setDiceToRoll(color) {
                     return;
                 }
 
-                // Tokens moving on the board (The 1/2, 1/3 math logic)
+                // Normal Board Scaling Logic
                 t.style.position = 'absolute';
-
                 if (count === 1) {
                     t.style.transform = 'scale(1) translate(0, 0)'; // Full Size
                 } else if (count === 2) {
@@ -646,10 +674,10 @@ function setDiceToRoll(color) {
                 } else if (count === 3) {
                     t.style.transform = `scale(0.55) translate(${i === 0 ? '-40%' : (i === 1 ? '40%' : '0')}, ${i === 2 ? '40%' : '-30%'})`; // One Third
                 } else {
-                    t.style.transform = `scale(0.45) translate(${i % 2 === 0 ? '-45%' : '45%'}, ${i < 2 ? '-45%' : '45%'})`; // Max crowded
+                    t.style.transform = `scale(0.45) translate(${i % 2 === 0 ? '-45%' : '45%'}, ${i < 2 ? '-45%' : '45%'})`; // Max Crowded
                 }
             });
-        }
+        });
     }
 
     // THE FIXED CHECK_CAPTURE AND MEME LOGIC
