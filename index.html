@@ -157,19 +157,19 @@
             cursor: pointer; visibility: hidden; opacity: 0;
         }
         .dice-cube.visible { visibility: visible; opacity: 1; }
-        @keyframes jump-glow {
-            0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 5px white); }
-            50% { transform: translateY(-12px); filter: drop-shadow(0 0 15px #FFD700); }
+       @keyframes jump-only {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
         }
         
         .ready-to-roll { 
-            animation: jump-glow 1s infinite; 
+            animation: jump-only 1s infinite; 
             cursor: pointer; 
         }
 
         .roll-text {
-            grid-column: 1 / -1; /* NEW: Forces text to stretch horizontally */
-            grid-row: 1 / -1;    /* NEW: Forces text to stretch vertically */
+            grid-column: 1 / -1; 
+            grid-row: 1 / -1;    
             display: flex;
             justify-content: center;
             align-items: center;
@@ -181,6 +181,7 @@
             background: #FFD700; 
             border-radius: 4px;
             z-index: 5;
+            box-shadow: 0 0 15px #FFD700; /* The glow is safely placed here now */
         }
         
         .face { 
