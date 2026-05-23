@@ -306,7 +306,7 @@
         tokens: [],
         bonusRoll: false,
         badLuckCounters: { green: 0, blue: 0, red: 0, yellow: 0 },
-        epicEntrancePlayed: { green: false, blue: false, red: false, yellow: false }
+        epicEntrancePlayed: { green: false, blue: false, red: false, yellow: false },
         pityTimer: { green: 0, blue: 0, red: 0, yellow: 0 }
     };
 
@@ -494,7 +494,7 @@
         }
     }
 
-function setDiceToRoll(color) {
+    function setDiceToRoll(color) {
         let cube = document.getElementById(`dice-${color}`);
         let frontFace = cube.querySelector('.front');
         
