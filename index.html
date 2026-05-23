@@ -99,7 +99,10 @@
 
         /* CENTER TRIANGLES */
         .center-home { grid-area: 7 / 7 / 10 / 10; position: relative; background: white; }
-        .center-home div { position: absolute; width: 0; height: 0; border-style: solid; border-width: calc(var(--cell-size) * 1.5); top: 0; left: 0; }
+        .ct-green, .ct-yellow, .ct-red, .ct-blue { 
+            position: absolute; width: 0; height: 0; 
+            border-style: solid; border-width: calc(var(--cell-size) * 1.5); top: 0; left: 0; 
+        }
         .ct-yellow { border-color: transparent transparent transparent var(--yellow); }
         .ct-blue { border-color: var(--blue) transparent transparent transparent; }
         .ct-red { border-color: transparent var(--red) transparent transparent; }
@@ -165,6 +168,8 @@
         }
 
         .roll-text {
+            grid-column: 1 / -1; /* NEW: Forces text to stretch horizontally */
+            grid-row: 1 / -1;    /* NEW: Forces text to stretch vertically */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -173,8 +178,9 @@
             font-size: 14px;
             font-weight: bold;
             color: #222;
-            background: #FFD700; /* Gold background to make it pop */
+            background: #FFD700; 
             border-radius: 4px;
+            z-index: 5;
         }
         
         .face { 
